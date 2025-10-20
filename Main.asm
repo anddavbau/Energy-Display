@@ -1,9 +1,9 @@
 processor 16f877
 include <p16f877.inc>
 
+valor  equ h'20'
 valor1 equ h'21'
 valor2 equ h'22'
-cte2 equ 250;Bucle interno
 
 ORG 0
 GOTO INICIO
@@ -15,11 +15,11 @@ INICIO:	BCF STATUS,RP0
 		CLRF PORTB
 		CLRF PORTD;Limpiamos los puertos A,B y D
 		BSF STATUS,RP0;Cambiamos al banco 1
-		MOVLW H'00'
+		MOVLW H'07'
 		MOVWF ADCON1;Utilizamos las entradas A y E como entradas del convertidor.
-		MOVWF TRISB;Definimos el puerto B como salida (Control del BUS LCD)
-		MOVWF TRISD;Definimos el puerto D como salida (Control del motor)
-		MOVWF TRISA;Definimos el puerto A como entrada(Control y señal de entrada
+		CLRF TRISA;Definimos el puerto A como salida(Control y señal de entrada
+		CLRF TRISB;Definimos el puerto B como salida (Control del BUS LCD)
+		CLRF TRISD;Definimos el puerto D como salida (Control del motor)
 		MOVLW H'FF'
 		MOVWF TRISE;Definimos el puerto E como entrada
 		BCF STATUS,RP0;Cambiamos al banco 0
@@ -67,58 +67,63 @@ MAIN_L:	MOVF PORTE,W
 		GOTO MAIN_L
 
 S0:		; --- MENSAJE LÍNEA 1: "Proyecto No.2" ---
-    movlw   0x80        ; Comando para posicionar cursor en línea 1, columna 1
-    call    COMANDO
+    	movlw   0x80        ; Comando para posicionar cursor en línea 1, columna 1
+    	call    COMANDO
     
-    movlw   'H'
-	call    DATOS
-	movlw   'P'
-    call    DATOS
-    movlw   'r'
-    call    DATOS
-    movlw   'o'
-    call    DATOS
-    movlw   'y'
-    call    DATOS
-    movlw   'e'
-    call    DATOS
-    movlw   'c'
-    call    DATOS
-    movlw   't'
-    call    DATOS
-    movlw   'o'
-    call    DATOS
-    movlw   ' '
-    call    DATOS
-    movlw   'N'
-    call    DATOS
-    movlw   'o'
-    call    DATOS
-    movlw   '.'
-    call    DATOS
-    movlw   '2'
-    call    DATOS
-
-    ; --- MENSAJE LÍNEA 2: "VOLMETRO" ---
-    movlw   0xC0        ; Comando para posicionar cursor en línea 2, columna 1
-    call    COMANDO
-
-    movlw   'V'
-    call    DATOS
-    movlw   'O'
-    call    DATOS
-    movlw   'L'
-    call    DATOS
-    movlw   'M'
-    call    DATOS
-    movlw   'E'
-    call    DATOS
-    movlw   'T'
-    call    DATOS
-    movlw   'R'
-    call    DATOS
-    movlw   'O'
-    call    DATOS
+	    movlw   'H'
+		call    DATOS
+		movlw   'P'
+	    call    DATOS
+	    movlw   'r'
+	    call    DATOS
+	    movlw   'o'
+	    call    DATOS
+	    movlw   'y'
+	    call    DATOS
+	    movlw   'e'
+	    call    DATOS
+	    movlw   'c'
+	    call    DATOS
+	    movlw   't'
+	    call    DATOS
+	    movlw   'o'
+	    call    DATOS
+	    movlw   ' '
+	    call    DATOS
+	    movlw   'N'
+	    call    DATOS
+	    movlw   'o'
+	    call    DATOS
+	    movlw   '.'
+	    call    DATOS
+	    movlw   '2'
+	    call    DATOS
+	
+	    ; --- MENSAJE LÍNEA 2: "VOLMETRO" ---
+	    movlw   0xC0        ; Comando para posicionar cursor en línea 2, columna 1
+	    call    COMANDO
+	
+	    movlw   'V'
+	    call    DATOS
+	    movlw   'O'
+	    call    DATOS
+	    movlw   'L'
+	    call    DATOS
+	    movlw   'M'
+	    call    DATOS
+	    movlw   'E'
+	    call    DATOS
+	    movlw   'T'
+	    call    DATOS
+	    movlw   'R'
+	    call    DATOS
+	    movlw   'O'
+	    call    DATOS
+S0_WAIT:MOVF PORTE,W
+		XORLW H'00'
+		BTFSS STATUS,Z
+		GOTO MAIN_L
+		GOTO S0_WAIT
 
 S1:		GOTO MAIN_L
 
@@ -135,13 +140,11 @@ S6:		GOTO MAIN_L
 START_LCD:
 		MOVLW H'30';Comando de inicializacion
 		CALL COMANDO
-		MOVLW D'100'
-		CALL RETARDO;Genera retraso de 100ms
+		CALL ret100ms;Genera retraso de 100ms
 		
 		MOVLW H'30'
 		CALL COMANDO
-		MOVLW D'100'
-		CALL RETARDO
+		CALL ret100ms
 		
 		MOVLW H'38';Configura LCD: 2 lineas, matriz de 5x8
 		CALL COMANDO
@@ -160,32 +163,53 @@ START_LCD:
 		RETURN
 
 COMANDO:MOVWF PORTB;Mueve el valor de W al puerto B (Bus de Datos)
-		MOVLW D'200'
-		CALL RETARDO
+		CALL ret200
 		BCF PORTA,0;Pone RS en 0 para indicar que es un COMANDO
 		BSF PORTA,1;Pone Enable en 1 para iniciar la escritura
-		CALL RETARDO
+		CALL ret200
 		BCF PORTA,1;Pone Enable en 0 para finalizar la escritura
 		MOVF PORTB,W;Recuperamos el valor de W
 		RETURN
 
 DATOS:	MOVWF PORTB;Mueve el valor de W al puerto B (Bus de DATOS)
-		MOVLW D'200'
-		CALL RETARDO
+		CALL ret200
 		BSF PORTA,0;Pone RS en 1 para indicar que es un dato
 		BSF PORTA,1;Pone Enable en 1 para iniciar la escritura
-		CALL RETARDO
+		CALL ret200
 		BCF PORTA,1;Pone Enable en 0 para finalizar la escritura
 		MOVF PORTB,W;Recuperamos el valor de W
 		RETURN
 
-RETARDO:MOVWF valor1;El valor W sera quien decida la cantidad de ms que va a tardar
-dos: 	MOVLW cte2
-		MOVWF valor2
-uno: 	NOP
-		DECFSZ valor2
-		GOTO uno
-		DECFSZ valor1
-		GOTO dos
-		RETURN
+; -- Retardo de ~200 microsegundos --
+ret200:
+    movlw   0x02
+    movwf   valor1
+loop:
+    movlw   d'164'
+    movwf   valor
+loop1:
+    decfsz  valor,1
+    goto    loop1
+    decfsz  valor1,1
+    goto    loop
+    return
+
+; -- Retardo de ~100 milisegundos --
+ret100ms:
+    movlw   0x03
+    movwf   valor
+tres:
+    movlw   0xff
+    movwf   valor1
+dos:
+    movlw   0xff
+    movwf   valor2
+uno:
+    decfsz  valor2
+    goto    uno
+    decfsz  valor1
+    goto    dos
+    decfsz  valor
+    goto    tres
+    return
 		END
