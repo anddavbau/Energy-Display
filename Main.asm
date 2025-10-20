@@ -16,7 +16,7 @@ INICIO:	BCF STATUS,RP0
 		CLRF PORTD;Limpiamos los puertos A,B y D
 		BSF STATUS,RP0;Cambiamos al banco 1
 		MOVLW H'07'
-		MOVWF ADCON1;Utilizamos las entradas A y E como entradas del convertidor.
+		MOVWF ADCON1;Desactivamos temporalmente el convertidor analogico para manipular el display.
 		CLRF TRISA;Definimos el puerto A como salida(Control y señal de entrada
 		CLRF TRISB;Definimos el puerto B como salida (Control del BUS LCD)
 		CLRF TRISD;Definimos el puerto D como salida (Control del motor)
